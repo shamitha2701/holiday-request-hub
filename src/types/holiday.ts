@@ -1,22 +1,21 @@
-export type HolidayStatus = 'pending' | 'approved' | 'rejected';
-export type HolidayType = 'paid' | 'unpaid' | 'sick' | 'other';
+export type HolidayStatus = 'Pending' | 'Approved' | 'Rejected';
+export type HolidayType = 'Paid' | 'Unpaid';
 
 export interface Holiday {
-  id: string;
+  id: number;
+  employeeName: string;
+  startDate: string;
+  endDate: string;
+  halfDay: boolean;
   type: HolidayType;
-  fromDate: string;
-  toDate: string;
-  daysCount: number;
   status: HolidayStatus;
   reason: string;
-  halfDay: boolean;
-  createdAt: string;
 }
 
 export interface HolidayFormData {
   type: HolidayType;
-  fromDate: Date;
-  toDate: Date;
+  startDate: Date;
+  endDate: Date;
   halfDay: boolean;
   reason: string;
 }

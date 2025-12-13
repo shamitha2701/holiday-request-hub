@@ -7,12 +7,13 @@ import { HolidayFilters } from '@/components/holidays/HolidayFilters';
 import { HolidayTable } from '@/components/holidays/HolidayTable';
 import { NewHolidayDialog } from '@/components/holidays/NewHolidayDialog';
 import { useHolidays, useHolidayFilters } from '@/hooks/useHolidays';
-import { Holiday } from '@/types/holiday';
+import { Holiday, HolidayFormData } from '@/types/holiday';
+import { Badge } from '@/components/ui/badge';
 
 export default function HolidayRequests() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
-  const { holidays, createHoliday, updateHoliday, deleteHoliday } = useHolidays();
+  const { holidays, isLoading, useLocalData, createHoliday, updateHoliday, deleteHoliday } = useHolidays();
   
   const {
     filteredHolidays,
@@ -31,7 +32,7 @@ export default function HolidayRequests() {
     setDialogOpen(true);
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: HolidayFormData) => {
     if (editingHoliday) {
       await updateHoliday(editingHoliday.id, data);
       setEditingHoliday(null);
@@ -47,7 +48,7 @@ export default function HolidayRequests() {
     }
   };
 
-  const handleSort = (column: 'fromDate' | 'createdAt') => {
+  const handleSort = (column: 'startDate' | 'id') => {
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -63,6 +64,15 @@ export default function HolidayRequests() {
 
   return (
     <Layout title="Holiday Requests">
+      {/* Connection Status */}
+      {useLocalData && (
+        <div className="mb-4">
+          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+            Using local data (JSON Server not connected)
+          </Badge>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="mb-6">
         <HolidayStats />
