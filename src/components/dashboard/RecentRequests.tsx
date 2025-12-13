@@ -14,9 +14,9 @@ export function RecentRequests({ holidays, onNewRequest }: RecentRequestsProps) 
   const recentHolidays = holidays.slice(0, 5);
 
   const statusStyles = {
-    approved: 'bg-success/10 text-success border-success/20',
-    pending: 'bg-warning/10 text-warning border-warning/20',
-    rejected: 'bg-destructive/10 text-destructive border-destructive/20',
+    Approved: 'bg-success/10 text-success border-success/20',
+    Pending: 'bg-warning/10 text-warning border-warning/20',
+    Rejected: 'bg-destructive/10 text-destructive border-destructive/20',
   };
 
   const formatDate = (dateStr: string) => {
@@ -24,6 +24,14 @@ export function RecentRequests({ holidays, onNewRequest }: RecentRequestsProps) 
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const calculateDays = (start: string, end: string, halfDay: boolean) => {
+    if (halfDay) return 0.5;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   };
 
   return (
@@ -53,13 +61,13 @@ export function RecentRequests({ holidays, onNewRequest }: RecentRequestsProps) 
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <p className="font-medium text-foreground capitalize">{holiday.type} Leave</p>
-                  <Badge variant="outline" className={cn('capitalize', statusStyles[holiday.status])}>
+                  <p className="font-medium text-foreground">{holiday.type} Leave</p>
+                  <Badge variant="outline" className={cn(statusStyles[holiday.status])}>
                     {holiday.status}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {formatDate(holiday.fromDate)} - {formatDate(holiday.toDate)} ({holiday.daysCount} days)
+                  {formatDate(holiday.startDate)} - {formatDate(holiday.endDate)} ({calculateDays(holiday.startDate, holiday.endDate, holiday.halfDay)} days)
                 </p>
               </div>
             </div>

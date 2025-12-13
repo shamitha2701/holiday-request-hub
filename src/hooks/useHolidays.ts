@@ -1,71 +1,77 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Holiday, HolidayFormData, HolidayStatus, HolidayType } from '@/types/holiday';
-import { mockHolidays } from '@/data/mockData';
+import { mockHolidays, API_BASE_URL } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
 
-// This hook is designed to work with JSON Server
-// Replace the mock implementation with actual API calls when ready
-
 export function useHolidays() {
-  const [holidays, setHolidays] = useState<Holiday[]>(mockHolidays);
-  const [isLoading, setIsLoading] = useState(false);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [useLocalData, setUseLocalData] = useState(false);
   const { toast } = useToast();
 
   const fetchHolidays = useCallback(async () => {
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/holidays');
-      // const data = await response.json();
-      // setHolidays(data);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setHolidays(mockHolidays);
+      const response = await fetch(`${API_BASE_URL}/holidays`);
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      setHolidays(data);
+      setUseLocalData(false);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch holidays',
-        variant: 'destructive',
-      });
+      console.log('JSON Server not available, using mock data');
+      setHolidays(mockHolidays);
+      setUseLocalData(true);
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, []);
+
+  useEffect(() => {
+    fetchHolidays();
+  }, [fetchHolidays]);
 
   const createHoliday = useCallback(async (data: HolidayFormData) => {
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/holidays', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
-      // const newHoliday = await response.json();
+      const startDate = data.startDate.toISOString().split('T')[0];
+      const endDate = data.endDate.toISOString().split('T')[0];
       
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const fromDate = data.fromDate.toISOString().split('T')[0];
-      const toDate = data.toDate.toISOString().split('T')[0];
-      const daysCount = data.halfDay ? 0.5 : Math.ceil((data.toDate.getTime() - data.fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      
-      const newHoliday: Holiday = {
-        id: Date.now().toString(),
-        type: data.type,
-        fromDate,
-        toDate,
-        daysCount,
-        status: 'pending',
-        reason: data.reason,
+      const newHoliday: Omit<Holiday, 'id'> = {
+        employeeName: "Nada Ahmed", // Current user
+        startDate,
+        endDate,
         halfDay: data.halfDay,
-        createdAt: new Date().toISOString().split('T')[0],
+        type: data.type,
+        status: 'Pending',
+        reason: data.reason,
       };
-      
-      setHolidays(prev => [newHoliday, ...prev]);
-      toast({
-        title: 'Success',
-        description: 'Holiday request submitted successfully',
-      });
-      return newHoliday;
+
+      if (!useLocalData) {
+        const response = await fetch(`${API_BASE_URL}/holidays`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newHoliday),
+        });
+        if (!response.ok) throw new Error('Failed to create');
+        const created = await response.json();
+        setHolidays(prev => [created, ...prev]);
+        toast({
+          title: 'Success',
+          description: 'Holiday request submitted successfully',
+        });
+        return created;
+      } else {
+        const created: Holiday = {
+          ...newHoliday,
+          id: Date.now(),
+        };
+        setHolidays(prev => [created, ...prev]);
+        toast({
+          title: 'Success',
+          description: 'Holiday request submitted (local mode)',
+        });
+        return created;
+      }
     } catch (error) {
       toast({
         title: 'Error',
@@ -76,31 +82,30 @@ export function useHolidays() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, useLocalData]);
 
-  const updateHoliday = useCallback(async (id: string, data: Partial<HolidayFormData>) => {
+  const updateHoliday = useCallback(async (id: number, data: Partial<HolidayFormData>) => {
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/holidays/${id}`, {
-      //   method: 'PATCH',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setHolidays(prev => prev.map(h => {
-        if (h.id === id) {
-          return {
-            ...h,
-            ...data,
-            fromDate: data.fromDate ? data.fromDate.toISOString().split('T')[0] : h.fromDate,
-            toDate: data.toDate ? data.toDate.toISOString().split('T')[0] : h.toDate,
-          };
-        }
-        return h;
-      }));
+      const updateData: Partial<Holiday> = {};
+      if (data.startDate) updateData.startDate = data.startDate.toISOString().split('T')[0];
+      if (data.endDate) updateData.endDate = data.endDate.toISOString().split('T')[0];
+      if (data.type) updateData.type = data.type;
+      if (data.reason) updateData.reason = data.reason;
+      if (data.halfDay !== undefined) updateData.halfDay = data.halfDay;
+
+      if (!useLocalData) {
+        const response = await fetch(`${API_BASE_URL}/holidays/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData),
+        });
+        if (!response.ok) throw new Error('Failed to update');
+        const updated = await response.json();
+        setHolidays(prev => prev.map(h => h.id === id ? updated : h));
+      } else {
+        setHolidays(prev => prev.map(h => h.id === id ? { ...h, ...updateData } : h));
+      }
       
       toast({
         title: 'Success',
@@ -116,15 +121,17 @@ export function useHolidays() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, useLocalData]);
 
-  const deleteHoliday = useCallback(async (id: string) => {
+  const deleteHoliday = useCallback(async (id: number) => {
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/api/holidays/${id}`, { method: 'DELETE' });
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!useLocalData) {
+        const response = await fetch(`${API_BASE_URL}/holidays/${id}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to delete');
+      }
       
       setHolidays(prev => prev.filter(h => h.id !== id));
       toast({
@@ -141,11 +148,12 @@ export function useHolidays() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, useLocalData]);
 
   return {
     holidays,
     isLoading,
+    useLocalData,
     fetchHolidays,
     createHoliday,
     updateHoliday,
@@ -157,7 +165,7 @@ export function useHolidayFilters(holidays: Holiday[]) {
   const [statusFilter, setStatusFilter] = useState<HolidayStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<HolidayType | 'all'>('all');
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
-  const [sortBy, setSortBy] = useState<'fromDate' | 'createdAt'>('createdAt');
+  const [sortBy, setSortBy] = useState<'startDate' | 'id'>('id');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const filteredHolidays = holidays
@@ -165,15 +173,18 @@ export function useHolidayFilters(holidays: Holiday[]) {
     .filter(h => typeFilter === 'all' || h.type === typeFilter)
     .filter(h => {
       if (!dateRange.from && !dateRange.to) return true;
-      const fromDate = new Date(h.fromDate);
-      if (dateRange.from && fromDate < dateRange.from) return false;
-      if (dateRange.to && fromDate > dateRange.to) return false;
+      const startDate = new Date(h.startDate);
+      if (dateRange.from && startDate < dateRange.from) return false;
+      if (dateRange.to && startDate > dateRange.to) return false;
       return true;
     })
     .sort((a, b) => {
-      const aVal = new Date(a[sortBy]).getTime();
-      const bVal = new Date(b[sortBy]).getTime();
-      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      if (sortBy === 'startDate') {
+        const aVal = new Date(a.startDate).getTime();
+        const bVal = new Date(b.startDate).getTime();
+        return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      return sortOrder === 'asc' ? a.id - b.id : b.id - a.id;
     });
 
   return {

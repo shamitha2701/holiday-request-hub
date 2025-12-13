@@ -37,9 +37,9 @@ export function HolidayFilters({
         </SelectTrigger>
         <SelectContent className="bg-popover">
           <SelectItem value="all">All Status</SelectItem>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="approved">Approved</SelectItem>
-          <SelectItem value="rejected">Rejected</SelectItem>
+          <SelectItem value="Pending">Pending</SelectItem>
+          <SelectItem value="Approved">Approved</SelectItem>
+          <SelectItem value="Rejected">Rejected</SelectItem>
         </SelectContent>
       </Select>
 
@@ -49,10 +49,8 @@ export function HolidayFilters({
         </SelectTrigger>
         <SelectContent className="bg-popover">
           <SelectItem value="all">All Types</SelectItem>
-          <SelectItem value="paid">Paid Leave</SelectItem>
-          <SelectItem value="unpaid">Unpaid Leave</SelectItem>
-          <SelectItem value="sick">Sick Leave</SelectItem>
-          <SelectItem value="other">Other</SelectItem>
+          <SelectItem value="Paid">Paid Leave</SelectItem>
+          <SelectItem value="Unpaid">Unpaid Leave</SelectItem>
         </SelectContent>
       </Select>
 

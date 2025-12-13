@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import HolidayRequests from "./pages/HolidayRequests";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
+import { TawkToDemo } from "./components/TawkToWidget";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,8 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      {/* Tawk.to Chat Widget - Replace with your own IDs */}
+      <TawkToDemo />
     </TooltipProvider>
   </QueryClientProvider>
 );

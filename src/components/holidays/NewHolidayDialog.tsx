@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon, CheckCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -38,9 +38,9 @@ import { cn } from '@/lib/utils';
 import { HolidayFormData, Holiday, HolidayType } from '@/types/holiday';
 
 const formSchema = z.object({
-  type: z.enum(['paid', 'unpaid', 'sick', 'other']),
-  fromDate: z.date({ required_error: 'Start date is required' }),
-  toDate: z.date({ required_error: 'End date is required' }),
+  type: z.enum(['Paid', 'Unpaid']),
+  startDate: z.date({ required_error: 'Start date is required' }),
+  endDate: z.date({ required_error: 'End date is required' }),
   halfDay: z.boolean().default(false),
   reason: z.string().min(1, 'Reason is required').max(500),
 });
@@ -59,13 +59,34 @@ export function NewHolidayDialog({ open, onOpenChange, onSubmit, editingHoliday 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: editingHoliday?.type || 'paid',
-      fromDate: editingHoliday ? new Date(editingHoliday.fromDate) : undefined,
-      toDate: editingHoliday ? new Date(editingHoliday.toDate) : undefined,
-      halfDay: editingHoliday?.halfDay || false,
-      reason: editingHoliday?.reason || '',
+      type: 'Paid',
+      startDate: undefined,
+      endDate: undefined,
+      halfDay: false,
+      reason: '',
     },
   });
+
+  // Reset form when editing holiday changes
+  useEffect(() => {
+    if (editingHoliday) {
+      form.reset({
+        type: editingHoliday.type,
+        startDate: new Date(editingHoliday.startDate),
+        endDate: new Date(editingHoliday.endDate),
+        halfDay: editingHoliday.halfDay,
+        reason: editingHoliday.reason,
+      });
+    } else {
+      form.reset({
+        type: 'Paid',
+        startDate: undefined,
+        endDate: undefined,
+        halfDay: false,
+        reason: '',
+      });
+    }
+  }, [editingHoliday, form]);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
@@ -125,17 +146,15 @@ export function NewHolidayDialog({ open, onOpenChange, onSubmit, editingHoliday 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Holiday Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-background">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-popover">
-                      <SelectItem value="paid">Paid Leave</SelectItem>
-                      <SelectItem value="unpaid">Unpaid Leave</SelectItem>
-                      <SelectItem value="sick">Sick Leave</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="Paid">Paid Leave</SelectItem>
+                      <SelectItem value="Unpaid">Unpaid Leave</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -146,7 +165,7 @@ export function NewHolidayDialog({ open, onOpenChange, onSubmit, editingHoliday 
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="fromDate"
+                name="startDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Start Date</FormLabel>
@@ -183,7 +202,7 @@ export function NewHolidayDialog({ open, onOpenChange, onSubmit, editingHoliday 
 
               <FormField
                 control={form.control}
-                name="toDate"
+                name="endDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>End Date</FormLabel>
@@ -208,8 +227,8 @@ export function NewHolidayDialog({ open, onOpenChange, onSubmit, editingHoliday 
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) => {
-                            const fromDate = form.getValues('fromDate');
-                            return date < new Date() || (fromDate && date < fromDate);
+                            const startDate = form.getValues('startDate');
+                            return date < new Date() || (startDate && date < startDate);
                           }}
                           initialFocus
                           className="pointer-events-auto"

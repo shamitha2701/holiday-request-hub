@@ -26,33 +26,26 @@ import { cn } from '@/lib/utils';
 interface HolidayTableProps {
   holidays: Holiday[];
   onEdit: (holiday: Holiday) => void;
-  onDelete: (id: string) => void;
-  sortBy: 'fromDate' | 'createdAt';
+  onDelete: (id: number) => void;
+  sortBy: 'startDate' | 'id';
   sortOrder: 'asc' | 'desc';
-  onSort: (column: 'fromDate' | 'createdAt') => void;
+  onSort: (column: 'startDate' | 'id') => void;
 }
 
 const ITEMS_PER_PAGE = 10;
 
 export function HolidayTable({ holidays, onEdit, onDelete, sortBy, sortOrder, onSort }: HolidayTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const totalPages = Math.ceil(holidays.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedHolidays = holidays.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const statusStyles = {
-    approved: 'bg-success/10 text-success border-success/20',
-    pending: 'bg-warning/10 text-warning border-warning/20',
-    rejected: 'bg-destructive/10 text-destructive border-destructive/20',
-  };
-
-  const typeLabels = {
-    paid: 'Paid Leave',
-    unpaid: 'Unpaid Leave',
-    sick: 'Sick Leave',
-    other: 'Other',
+    Approved: 'bg-success/10 text-success border-success/20',
+    Pending: 'bg-warning/10 text-warning border-warning/20',
+    Rejected: 'bg-destructive/10 text-destructive border-destructive/20',
   };
 
   const formatDate = (dateStr: string) => {
@@ -63,12 +56,20 @@ export function HolidayTable({ holidays, onEdit, onDelete, sortBy, sortOrder, on
     });
   };
 
-  const handleSort = (column: 'fromDate' | 'createdAt') => {
+  const calculateDays = (start: string, end: string, halfDay: boolean) => {
+    if (halfDay) return 0.5;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  const handleSort = (column: 'startDate' | 'id') => {
     onSort(column);
   };
 
   const handleDelete = () => {
-    if (deleteId) {
+    if (deleteId !== null) {
       onDelete(deleteId);
       setDeleteId(null);
     }
@@ -80,19 +81,20 @@ export function HolidayTable({ holidays, onEdit, onDelete, sortBy, sortOrder, on
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead className="w-[80px]">ID</TableHead>
+            <TableHead>Employee</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>
               <Button
                 variant="ghost"
                 size="sm"
                 className="gap-1 -ml-3"
-                onClick={() => handleSort('fromDate')}
+                onClick={() => handleSort('startDate')}
               >
-                From Date
+                Start Date
                 <ArrowUpDown className="h-4 w-4" />
               </Button>
             </TableHead>
-            <TableHead>To Date</TableHead>
+            <TableHead>End Date</TableHead>
             <TableHead className="text-center">Days</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Reason</TableHead>
@@ -102,7 +104,7 @@ export function HolidayTable({ holidays, onEdit, onDelete, sortBy, sortOrder, on
         <TableBody>
           {paginatedHolidays.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                 No holiday requests found.
               </TableCell>
             </TableRow>
@@ -112,12 +114,16 @@ export function HolidayTable({ holidays, onEdit, onDelete, sortBy, sortOrder, on
                 <TableCell className="font-mono text-sm text-muted-foreground">
                   #{holiday.id}
                 </TableCell>
-                <TableCell className="font-medium">{typeLabels[holiday.type]}</TableCell>
-                <TableCell>{formatDate(holiday.fromDate)}</TableCell>
-                <TableCell>{formatDate(holiday.toDate)}</TableCell>
-                <TableCell className="text-center">{holiday.daysCount}</TableCell>
+                <TableCell className="font-medium">{holiday.employeeName}</TableCell>
+                <TableCell>{holiday.type}</TableCell>
+                <TableCell>{formatDate(holiday.startDate)}</TableCell>
+                <TableCell>{formatDate(holiday.endDate)}</TableCell>
+                <TableCell className="text-center">
+                  {calculateDays(holiday.startDate, holiday.endDate, holiday.halfDay)}
+                  {holiday.halfDay && <span className="text-xs text-muted-foreground ml-1">(half)</span>}
+                </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={cn('capitalize', statusStyles[holiday.status])}>
+                  <Badge variant="outline" className={cn(statusStyles[holiday.status])}>
                     {holiday.status}
                   </Badge>
                 </TableCell>
@@ -128,7 +134,7 @@ export function HolidayTable({ holidays, onEdit, onDelete, sortBy, sortOrder, on
                       variant="ghost"
                       size="icon"
                       onClick={() => onEdit(holiday)}
-                      disabled={holiday.status !== 'pending'}
+                      disabled={holiday.status !== 'Pending'}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -136,7 +142,7 @@ export function HolidayTable({ holidays, onEdit, onDelete, sortBy, sortOrder, on
                       variant="ghost"
                       size="icon"
                       onClick={() => setDeleteId(holiday.id)}
-                      disabled={holiday.status !== 'pending'}
+                      disabled={holiday.status !== 'Pending'}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -179,7 +185,7 @@ export function HolidayTable({ holidays, onEdit, onDelete, sortBy, sortOrder, on
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent className="bg-card">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Holiday Request</AlertDialogTitle>
