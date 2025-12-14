@@ -1,73 +1,124 @@
-# Welcome to your Lovable project
+Holiday Request Hub
 
-## Project info
+A modern frontend application for managing employee holiday requests.
+This project features a static dashboard UI with a dynamic Holiday Requests module integrated using a mock backend (JSON Server)
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Live Demo: https://holiday-request-hub.vercel.app
 
-## How can I edit this code?
+Features
+Static Dashboard UI
+Summary cards
+Charts & statistics
+Clean and responsive layout
+Holiday Requests (Dynamic)
+Fetch holiday requests from API
+Display employee leave details
+Status handling (Pending / Approved / Rejected)
+Client-side Filtering & Sorting
+Pagination for better UX
+Responsive Design (Desktop & Mobile)
 
-There are several ways of editing your application.
+Tech Stack
+ Frontend: React (Vite)
+ Styling: CSS / Tailwind CSS
+ Backend (Mock): JSON Server
+ Deployment: Vercel
 
-**Use Lovable**
+Getting Started (Run Locally)
+Follow these steps to run the project on your local machine:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+1) Clone the Repository
+git clone https://github.com/your-username/holiday-request-hub.git
+cd holiday-request-hub
 
-Changes made via Lovable will be committed automatically to this repo.
+2️) Install Dependencies
+npm install
 
-**Use your preferred IDE**
+3️) Start JSON Server (Mock API)
+npx json-server --watch db.json --port 4000
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Make sure db.json is present in the root folder.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4️) Start the React App
 npm run dev
-```
 
-**Edit a file directly in GitHub**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+App will run on:
+http://localhost:5173
+API will run on:
+http://localhost:4000
 
-**Use GitHub Codespaces**
+Component Structure
+src/
+│── components/
+│   ├── layout/
+│   │   ├── Layout.jsx
+│   │   ├── Sidebar.jsx
+│   │   └── Navbar.jsx
+│   │
+│   ├── dashboard/
+│   │   ├── SummaryCards.jsx
+│   │   ├── WorkingHoursChart.jsx
+│   │   ├── DonutStats.jsx
+│   │   └── HolidayRequestsStatic.jsx
+│   │
+│   └── holidayRequests/
+│       ├── HolidayRequests.jsx
+│       ├── RequestTable.jsx
+│       ├── Filters.jsx
+│       └── Pagination.jsx
+│
+│── pages/
+│   └── Dashboard.jsx
+│
+│── services/
+│   └── api.js
+│
+│── styles/
+│   └── App.css
+│
+│── App.jsx
+│── main.jsx
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Component Explanation
+Layout – Wraps the entire dashboard structure (Sidebar + Navbar + Content)
+Sidebar – Navigation menu (static)
+Navbar – Top bar with user actions and icons
+SummaryCards – Displays static statistics
+Charts – Static visual data (working hours, donut stats)
+HolidayRequests – Dynamic section fetching API data
+Filters & Pagination – Client-side data handling
 
-## What technologies are used for this project?
 
-This project is built with:
+API Usage & Endpoints
+The application uses JSON Server as a mock backend.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Endpoints
+Get All Holiday Requests
+GET /holidays
+Example Response
+{
+  "id": 1,
+  "employeeName": "John Doe",
+  "startDate": "2025-12-10",
+  "endDate": "2025-12-12",
+  "halfDay": false,
+  "type": "Paid",
+  "status": "Pending",
+  "reason": "Family trip"
+}
 
-## How can I deploy this project?
+Update Holiday Status
+PATCH /holidays/:id
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Delete a Request
+DELETE /holidays/:id
 
-## Can I connect a custom domain to my Lovable project?
+Notes
+All dashboard sections are static except Holiday Request.
+Filtering, sorting, and pagination are handled on the client-side
+This project is designed to match a given Figma UI
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Author
+Shamitha
+Frontend Developer | React Enthusiast
